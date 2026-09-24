@@ -1,0 +1,42 @@
+module Inkplot
+  VERSION: String
+
+  class Config
+    attr_accessor font: String?
+  end
+
+  class Builder
+    def title: (String value) -> String
+    def x_axis: (?label: String?, ?type: Symbol?, ?scale: Symbol?, ?min: untyped, ?max: untyped, ?order: Array[untyped]?) -> Hash[Symbol, untyped]
+    def y_axis: (?label: String?, ?type: Symbol?, ?scale: Symbol?, ?min: untyped, ?max: untyped) -> Hash[Symbol, untyped]
+    def legend: (?position: Symbol) -> Hash[Symbol, Symbol]
+    def line: (untyped x, ?untyped y, ?label: String?, ?color: String?, ?dash: bool, ?gaps: Symbol, **untyped options) -> Builder
+    def scatter: (untyped x, ?untyped y, ?label: String?, ?color: String?, ?size: untyped, **untyped options) -> Builder
+    def area: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
+    def step: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
+    def bar: (untyped categories, ?untyped values, ?label: String?, ?color: String?, ?horizontal: bool, ?stacked: bool, **untyped options) -> Builder
+    def histogram: (untyped values, ?bins: untyped, ?label: String?, ?color: String?, **untyped options) -> Builder
+    def hline: (Numeric value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
+    def vline: (untyped value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
+    def text: (untyped x, Numeric y, String value, ?color: String?) -> Array[Hash[Symbol, untyped]]
+  end
+
+  class Chart
+    attr_reader builder: Builder
+    attr_reader width: Integer
+    attr_reader height: Integer
+    def to_svg: (?width: Integer, ?height: Integer) -> String
+    def to_png: (?width: Integer, ?height: Integer, ?scale: Integer) -> String
+    def to_image: (?scale: Integer) -> untyped
+    def save: (String | _Path path, ?width: Integer, ?height: Integer, ?scale: Integer) -> String | _Path
+    def to_inlay: () -> Hash[Symbol, untyped]
+  end
+
+  def self.config: () -> Config
+  def self.plot: (?width: Integer, ?height: Integer, ?theme: Symbol, **untyped options) { (Builder) -> void } -> Chart
+  def self.line: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
+  def self.scatter: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?size: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
+  def self.bar: (untyped data, ?horizontal: bool, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
+  def self.histogram: (untyped values, ?bins: untyped, ?x_label: String?, ?y_label: String?, ?title: String?, **untyped options) -> Chart
+  def self.sparkline: (Array[untyped] values) -> String
+end
