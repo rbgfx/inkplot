@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "tempfile"
+require "lookalike"
 
 RSpec.describe "Inkplot PNG output" do
   let(:chart) do
@@ -51,6 +52,19 @@ RSpec.describe "Inkplot PNG output" do
       decoded = Tessel.decode(example.to_png)
       expect([decoded.width, decoded.height]).to eq([example.width, example.height])
     end
+  end
+
+  it "matches stable PNG snapshots for all gallery charts" do
+    require_relative "../examples/gallery"
+
+    previous_font = Inkplot.config.font
+    Inkplot.config.font = nil # Use Glyphic's embedded bitmap font; never depend on system fonts.
+    InkplotGallery.charts.each do |name, chart|
+      image = Tessel.decode(chart.to_png(width: 320, height: 180))
+      Lookalike.assert_snapshot(image, "inkplot/#{name}", mode: :channel)
+    end
+  ensure
+    Inkplot.config.font = previous_font
   end
 
   it "uses the configured TrueType font when one is available" do

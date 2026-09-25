@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] - Unreleased
+## [0.3.0] - 2026-09-25
 
 - Add PNG rendering, time scales, histograms, category labels, and text annotations.
 - Expand the gallery to 20 charts and add chart-to-Inlay integration.
