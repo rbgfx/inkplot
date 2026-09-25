@@ -28,7 +28,9 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: default
-          bundler-cache: true
+          bundler-cache: false
+      - name: Install dependencies
+        run: bundle install --full-index
       - name: Run verification
         run: bundle exec rake verify
       - name: Verify optional PNG renderer
