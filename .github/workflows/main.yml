@@ -20,52 +20,19 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ['3.2', '3.3', '3.4', '4.0']
-    defaults:
-      run:
-        working-directory: main
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: main
-          persist-credentials: false
-      - name: Checkout tessel
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: rbgfx/tessel
-          ref: main
-          path: tessel
-          persist-credentials: false
-      - name: Checkout glyphic
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: rbgfx/glyphic
-          ref: main
-          path: glyphic
-          persist-credentials: false
-      - name: Checkout rlsl
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: rbgfx/rlsl
-          ref: main
-          path: rlsl
-          persist-credentials: false
-      - name: Checkout flipbook
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: rbgfx/flipbook
-          ref: main
-          path: flipbook
           persist-credentials: false
       - uses: ruby/setup-ruby@984c0c890880bbf811283d6f09c4607c62d210a4 # v1.323.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: default
           bundler-cache: true
-          working-directory: main
       - name: Run verification
         run: bundle exec rake verify
       - name: Verify optional PNG renderer
-        run: RUBYLIB=../tessel/lib:../glyphic/lib bundle exec rspec spec/inkplot_raster_spec.rb
+        run: bundle exec rspec spec/inkplot_raster_spec.rb
 
   package:
     name: Strict gem build
