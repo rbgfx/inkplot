@@ -1,5 +1,7 @@
 # Changelog
 
+No 0.2.0 release was published. The 0.3.1 gem contains the PNG and chart features described below.
+
 ## [0.3.1] - 2026-09-25
 
 - Include the PNG renderer and expanded chart features in the published gem.
