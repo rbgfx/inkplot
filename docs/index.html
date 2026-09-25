@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101113">
+<meta name="description" content="Build clear SVG and PNG charts from plain Ruby data with Inkplot.">
+<title>Inkplot — charts from Ruby</title>
+<style>
+:root{color-scheme:dark;--bg:#101113;--panel:#191b1f;--line:#2c2f34;--text:#f2f0e9;--muted:#a3a5aa;--accent:#c6f277;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 72% -20%,#293523,transparent 42%),var(--bg);color:var(--text);font:16px/1.6 var(--sans)}a{color:inherit;text-decoration:none}a:hover{color:var(--accent)}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{font-size:20px;font-weight:750;letter-spacing:-.04em}.brand span,.tag{color:var(--accent)}.navlinks{display:flex;gap:26px;color:var(--muted);font-size:14px}.hero{padding:94px 0 70px;max-width:800px}.tag{font:12px var(--mono);text-transform:uppercase;letter-spacing:.14em}h1{font-size:clamp(48px,8vw,88px);line-height:.98;letter-spacing:-.075em;margin:22px 0}.hero p{max-width:590px;color:var(--muted);font-size:19px}.actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}.button{padding:11px 17px;border:1px solid var(--line);border-radius:5px;font-weight:650}.primary{background:var(--accent);color:#14170e;border-color:var(--accent)}.install{margin-top:26px;display:inline-flex;gap:18px;background:#090a0b;border:1px solid var(--line);border-radius:6px;padding:12px 15px;font:14px var(--mono)}.install span{color:#72757b}.section{padding:46px 0 70px;border-top:1px solid var(--line)}.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:24px}.section h2{font-size:28px;letter-spacing:-.045em;margin:8px 0}.sectionhead p{color:var(--muted);margin:0;max-width:420px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}.card img{display:block;width:100%;aspect-ratio:1.7;object-fit:cover;background:#11151b}.cardbody{padding:14px 16px}.card h3{font-size:15px;margin:0}.card p{font-size:13px;color:var(--muted);margin:4px 0 0}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.feature{border-left:1px solid var(--line);padding:3px 0 3px 16px}.feature p{margin:4px 0 0;color:var(--muted);font-size:14px}.code{padding:20px;background:#090a0b;border:1px solid var(--line);border-radius:8px;overflow:auto;font:14px/1.8 var(--mono);color:#d8e7c2}.foot{border-top:1px solid var(--line);padding:24px 0 38px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:16px}
+@media(max-width:700px){.hero{padding:68px 0 54px}.navlinks{gap:14px}.grid,.features{grid-template-columns:1fr}.sectionhead{align-items:start;flex-direction:column}.foot{flex-direction:column}}
+</style>
+</head>
+<body><div class="wrap">
+<nav class="nav" aria-label="Main navigation"><a class="brand" href="#top">ink<span>plot</span></a><div class="navlinks"><a href="#gallery">Gallery</a><a href="https://github.com/rbgfx/inkplot">GitHub</a><a href="https://rubygems.org/gems/inkplot">RubyGems</a></div></nav>
+<main id="top">
+<section class="hero"><div class="tag">A plotting toolkit for Ruby</div><h1>Make data<br>easy to see.</h1><p>Build clear SVG and PNG charts from plain Ruby data. A small, dependency-free core with thoughtful defaults and room to tune the details.</p><div class="actions"><a class="button primary" href="https://github.com/rbgfx/inkplot#quick-start">Read the quick start ↗</a><a class="button" href="https://github.com/rbgfx/inkplot/blob/main/examples/gallery/README.md">Browse all examples</a></div><div class="install"><span>$</span> gem install inkplot</div></section>
+<section class="section" id="gallery"><div class="sectionhead"><div><div class="tag">Selected work</div><h2>Charts from a few lines of Ruby</h2></div><p>Line, bar, scatter, histogram, and area charts share one consistent API.</p></div><div class="grid">
+<a class="card" href="https://github.com/rbgfx/inkplot/blob/main/examples/gallery/01-line.svg"><img src="https://raw.githubusercontent.com/rbgfx/inkplot/main/examples/gallery/01-line.svg" alt="Line chart example"><div class="cardbody"><h3>Readable trends</h3><p>Line charts with labeled axes and a restrained grid.</p></div></a>
+<a class="card" href="https://github.com/rbgfx/inkplot/blob/main/examples/gallery/14-dark-theme.svg"><img src="https://raw.githubusercontent.com/rbgfx/inkplot/main/examples/gallery/14-dark-theme.svg" alt="Dark themed chart example"><div class="cardbody"><h3>Dark theme</h3><p>Charts that sit naturally in dark interfaces.</p></div></a>
+<a class="card" href="https://github.com/rbgfx/inkplot/blob/main/examples/gallery/09-histogram.svg"><img src="https://raw.githubusercontent.com/rbgfx/inkplot/main/examples/gallery/09-histogram.svg" alt="Histogram example"><div class="cardbody"><h3>Distribution at a glance</h3><p>Explore a dataset with an automatic histogram.</p></div></a>
+</div></section>
+<section class="section"><div class="sectionhead"><div><div class="tag">Quick start</div><h2>From values to SVG</h2></div></div><pre class="code"><code>require "inkplot"
+
+chart = Inkplot.line([3, 1, 4, 1, 5, 9], title: "A small series")
+chart.save("series.svg")</code></pre></section>
+<section class="section"><div class="features"><div class="feature"><strong>Plain Ruby data</strong><p>Arrays, hashes, CSV tables, and records with string or symbol keys.</p></div><div class="feature"><strong>SVG by default</strong><p>Standalone SVG from Ruby's standard library. Optional PNG rendering is pure Ruby.</p></div><div class="feature"><strong>Useful scales</strong><p>Linear, logarithmic, time, and ordered category axes, plus dark and light themes.</p></div></div></section>
+</main><footer class="foot"><span>Inkplot · Charts from Ruby</span><span><a href="https://github.com/rbgfx/inkplot">Source</a> · MIT License</span></footer>
+</div></body>
+</html>
