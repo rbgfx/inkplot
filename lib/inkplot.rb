@@ -3,6 +3,7 @@
 require_relative "inkplot/version"
 require_relative "inkplot/core"
 require_relative "inkplot/renderers/svg"
+require_relative "inkplot/renderers/png"
 
 module Inkplot
   class Error < StandardError; end
@@ -39,6 +40,13 @@ module Inkplot
       else
         builder.bar(data, **mark_options)
       end
+      Chart.new(builder)
+    end
+
+    def histogram(data, bins: :auto, title: nil, x_label: nil, y_label: nil, **options)
+      chart_options, mark_options = options.partition { |key, _| %i[width height theme].include?(key) }.map(&:to_h)
+      builder = Builder.new(**chart_options, title:, x_label:, y_label:)
+      builder.histogram(data, bins:, **mark_options)
       Chart.new(builder)
     end
 

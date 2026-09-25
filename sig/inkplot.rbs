@@ -10,13 +10,15 @@ module Inkplot
     def x_axis: (?label: String?, ?type: Symbol?, ?scale: Symbol?, ?min: untyped, ?max: untyped, ?order: Array[untyped]?) -> Hash[Symbol, untyped]
     def y_axis: (?label: String?, ?type: Symbol?, ?scale: Symbol?, ?min: untyped, ?max: untyped) -> Hash[Symbol, untyped]
     def legend: (?position: Symbol) -> Hash[Symbol, Symbol]
-    def line: (untyped x, ?untyped y, ?label: String?, ?color: String?, ?dash: bool, ?gaps: Symbol, **untyped options) -> Builder
+    def line: (untyped x, ?untyped y, ?label: String?, ?color: String?, ?dash: bool, ?gaps: Symbol, ?cap: Symbol, ?join: Symbol, **untyped options) -> Builder
     def scatter: (untyped x, ?untyped y, ?label: String?, ?color: String?, ?size: untyped, **untyped options) -> Builder
     def area: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
     def step: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
     def bar: (untyped categories, ?untyped values, ?label: String?, ?color: String?, ?horizontal: bool, ?stacked: bool, **untyped options) -> Builder
+    def histogram: (Array[untyped] values, ?bins: Symbol | Integer | Array[Numeric], ?label: String?, ?color: String?) -> Builder
     def hline: (Numeric value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
     def vline: (untyped value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
+    def annotate: (untyped x, Numeric y, String text, ?color: String?, ?anchor: Symbol) -> Array[Hash[Symbol, untyped]]
   end
 
   class Chart
@@ -24,7 +26,11 @@ module Inkplot
     attr_reader width: Integer
     attr_reader height: Integer
     def to_svg: (?width: Integer, ?height: Integer) -> String
-    def save: (String | _Path path, ?width: Integer, ?height: Integer) -> String | _Path
+    def to_image: (?width: Integer, ?height: Integer, ?scale: Integer) -> untyped
+    def to_png: (?width: Integer, ?height: Integer, ?scale: Integer) -> String
+    def _repr_svg_: () -> String
+    def to_inlay: () -> Hash[Symbol, untyped]
+    def save: (String | Pathname path, ?width: Integer, ?height: Integer, ?scale: Integer) -> (String | Pathname)
   end
 
   def self.config: () -> Config
@@ -32,5 +38,6 @@ module Inkplot
   def self.line: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
   def self.scatter: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?size: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
   def self.bar: (untyped data, ?horizontal: bool, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
+  def self.histogram: (Array[untyped] data, ?bins: Symbol | Integer | Array[Numeric], ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
   def self.sparkline: (Array[untyped] values) -> String
 end

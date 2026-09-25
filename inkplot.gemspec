@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Yudai Takada"]
   spec.email = ["t.yudai92@gmail.com"]
 
-  spec.summary = "SVG charts for Ruby"
-  spec.description = "Build line, bar, scatter, and other charts as standalone SVG."
+  spec.summary = "Plain Ruby SVG and PNG charts"
+  spec.description = "Build line, bar, scatter, histogram, and other charts as standalone SVG or PNG."
   spec.homepage = "https://github.com/rbgfx/inkplot"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

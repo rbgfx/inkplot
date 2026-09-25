@@ -45,7 +45,9 @@ module Inkplot
 
           d = "M #{n(points[0][0])} #{n(points[0][1])} " + points.drop(1).map { |px, py| "L #{n(px)} #{n(py)}" }.join(" ")
           dash = element[:dash] ? %( stroke-dasharray="5 4") : ""
-          %(<path class="#{attr(element[:class] || 'mark-line')}" d="#{d}" fill="none" stroke="#{attr(element[:stroke])}" stroke-width="#{n(element[:width] || 1)}"#{dash}/>)
+          cap = element[:cap] ? %( stroke-linecap="#{attr(element[:cap])}") : ""
+          join = element[:join] ? %( stroke-linejoin="#{attr(element[:join])}") : ""
+          %(<path class="#{attr(element[:class] || 'mark-line')}" d="#{d}" fill="none" stroke="#{attr(element[:stroke])}" stroke-width="#{n(element[:width] || 1)}"#{dash}#{cap}#{join}/>)
         when :polygon
           points = element[:points]
           commands = points.drop(1).map { |px, py| "L #{n(px)} #{n(py)}" }.join(" ")
