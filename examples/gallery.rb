@@ -31,69 +31,19 @@ module InkplotGallery
         p.bar(%w[Mon Tue Wed Thu Fri], [12, 16, 11, 19, 22], label: "Direct", stacked: true)
         p.bar(%w[Mon Tue Wed Thu Fri], [8, 9, 13, 10, 14], label: "Search", stacked: true)
       end],
-      ["09-signed-stack", Inkplot.plot(title: "Daily net change") do |p|
-        p.bar(%w[Mon Tue Wed Thu Fri], [8, -4, 5, -2, 9], label: "New", stacked: true)
-        p.bar(%w[Mon Tue Wed Thu Fri], [3, -6, 2, -5, 4], label: "Removed", stacked: true)
-      end],
       ["10-area", Inkplot.plot(title: "Build time over a release") { |p| p.area((1..8).to_a, [25, 29, 27, 38, 36, 44, 40, 51], label: "Seconds") }],
-      ["11-step", Inkplot.plot(title: "Queue depth") { |p| p.step((0..7).to_a, [3, 3, 5, 5, 4, 8, 8, 2], label: "Jobs") }],
-      ["12-histogram", Inkplot.histogram([8, 9, 10, 10, 11, 12, 12, 13, 14, 15, 17, 18, 22, 25, 31, 33], bins: :auto, title: "Response time", x_label: "Milliseconds")],
-      ["13-log-scale", Inkplot.plot(title: "Growth on a log scale") do |p|
-        p.y_axis(scale: :log, min: 1)
-        p.line((0..5).to_a, [1, 3, 9, 27, 81, 243])
-      end],
-      ["14-time-axis", Inkplot.plot(title: "Hourly requests") do |p|
-        p.x_axis(label: "UTC", type: :time)
-        p.line((0..6).map do |hour|
-          Time.utc(2026, 9, 24, hour * 4)
-        end, [12, 17, 15, 24, 31, 27, 38])
-      end],
-      ["15-category-order", Inkplot.plot(title: "Deployment health") do |p|
-        p.x_axis(order: %w[dev staging production])
-        p.line(%w[production dev staging], [98, 100, 99], label: "Success %")
-      end],
-      ["16-dark-theme", Inkplot.plot(title: "Dark dashboard", theme: :dark) do |p|
-        p.line((1..7).to_a, [12, 18, 16, 24, 22, 30, 35], label: "Throughput")
-        p.hline(20, label: "Target", color: :orange)
-      end],
-      ["17-annotations", Inkplot.plot(title: "Service level objective") do |p|
-        p.line((1..7).to_a, [32, 28, 41, 36, 30, 24, 27])
-        p.hline(35, label: "SLO", color: :red)
-        p.vline(4, color: :blue)
-        p.text(4.1, 42, "deploy")
-      end],
-      ["18-combo", Inkplot.plot(title: "Sales and conversion") do |p|
-        p.bar(%w[Jan Feb Mar Apr], [24, 30, 27, 42], label: "Orders")
-        p.line(%w[Jan Feb Mar Apr], [2.8, 3.1, 3.0, 3.8], label: "Conversion %", color: :red)
-      end],
-      ["19-legend-position", Inkplot.plot(title: "Legend below", width: 640, height: 380) do |p|
-        p.line((1..5).to_a, [3, 5, 4, 7, 6], label: "Actual")
-        p.line((1..5).to_a, [2, 3, 4, 5, 6], label: "Plan")
-        p.legend(position: :bottom_left)
-      end],
-      ["20-long-categories", Inkplot.plot(title: "Labels rotate when needed") do |p|
-        p.x_axis(order: ["North America", "South America", "Europe", "Asia Pacific"])
-        p.bar(["North America", "South America", "Europe", "Asia Pacific"], [22, 14, 31, 27])
-      end]
+      ["11-step", Inkplot.plot(title: "Queue depth") { |p| p.step((0..7).to_a, [3, 3, 5, 5, 4, 8, 8, 2], label: "Jobs") }]
     ]
   end
 end
 
 if $PROGRAM_NAME == __FILE__
-  update_snapshots = ARGV.delete("--update-snapshots")
-  raise ArgumentError, "usage: ruby examples/gallery.rb [--update-snapshots]" unless ARGV.empty?
+  raise ArgumentError, "usage: ruby examples/gallery.rb" unless ARGV.empty?
 
   svg_dir = File.expand_path("gallery", __dir__)
   FileUtils.mkdir_p(svg_dir)
 
   InkplotGallery.charts.each do |name, chart|
     File.write(File.join(svg_dir, "#{name}.svg"), chart.to_svg)
-    next unless update_snapshots
-
-    require "tessel"
-    require "glyphic"
-    png_dir = File.expand_path("../spec/snapshots", __dir__)
-    FileUtils.mkdir_p(png_dir)
-    File.binwrite(File.join(png_dir, "#{name}.png"), Tessel::PNG.encode(chart.to_image))
   end
 end

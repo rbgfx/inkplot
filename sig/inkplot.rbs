@@ -15,10 +15,8 @@ module Inkplot
     def area: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
     def step: (untyped x, ?untyped y, ?label: String?, ?color: String?, **untyped options) -> Builder
     def bar: (untyped categories, ?untyped values, ?label: String?, ?color: String?, ?horizontal: bool, ?stacked: bool, **untyped options) -> Builder
-    def histogram: (untyped values, ?bins: untyped, ?label: String?, ?color: String?, **untyped options) -> Builder
     def hline: (Numeric value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
     def vline: (untyped value, ?label: String?, ?color: String?, ?dash: bool) -> Array[Hash[Symbol, untyped]]
-    def text: (untyped x, Numeric y, String value, ?color: String?) -> Array[Hash[Symbol, untyped]]
   end
 
   class Chart
@@ -26,10 +24,7 @@ module Inkplot
     attr_reader width: Integer
     attr_reader height: Integer
     def to_svg: (?width: Integer, ?height: Integer) -> String
-    def to_png: (?width: Integer, ?height: Integer, ?scale: Integer) -> String
-    def to_image: (?scale: Integer) -> untyped
-    def save: (String | _Path path, ?width: Integer, ?height: Integer, ?scale: Integer) -> String | _Path
-    def to_inlay: () -> Hash[Symbol, untyped]
+    def save: (String | _Path path, ?width: Integer, ?height: Integer) -> String | _Path
   end
 
   def self.config: () -> Config
@@ -37,6 +32,5 @@ module Inkplot
   def self.line: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
   def self.scatter: (untyped data, ?untyped values, ?x: untyped, ?y: untyped, ?size: untyped, ?color: untyped, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
   def self.bar: (untyped data, ?horizontal: bool, ?title: String?, ?x_label: String?, ?y_label: String?, **untyped options) -> Chart
-  def self.histogram: (untyped values, ?bins: untyped, ?x_label: String?, ?y_label: String?, ?title: String?, **untyped options) -> Chart
   def self.sparkline: (Array[untyped] values) -> String
 end

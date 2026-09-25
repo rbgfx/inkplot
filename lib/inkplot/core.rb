@@ -58,13 +58,6 @@ module Inkplot
     rescue NoMethodError
       nil
     end
-
-    def time(value)
-      case value
-      when Time then value
-      when Date then value.to_time
-      end
-    end
   end
 
   module Ticks
@@ -109,41 +102,6 @@ module Inkplot
       else
         exponents.map { |power| 10.0**power }.grep(minimum..maximum)
       end
-    end
-
-    def time(minimum, maximum, offset: 0)
-      span = maximum - minimum
-      intervals = [1, 5, 15, 30, 60, 300, 900, 1800, 3600, 10_800, 21_600, 43_200, 86_400, 604_800, 2_592_000, 7_776_000, 15_552_000, 31_536_000]
-      step = intervals.find { |value| span / value <= 6 } || 31_536_000
-      ticks = if step < 2_592_000
-                first = (minimum / step).ceil * step
-                (0..10).map { |index| first + (index * step) }.take_while { |value| value <= maximum }
-              elsif step < 31_536_000
-                time = Time.at(minimum).getlocal(offset)
-                month = time.month
-                month += 1 while Time.new(time.year, month, 1, 0, 0, 0, offset).to_f < minimum
-                month_ticks = Array.new(8) do |index|
-                  absolute = (time.year * 12) + month - 1 + (index * (step / 2_592_000).round)
-                  Time.new(absolute / 12, (absolute % 12) + 1, 1, 0, 0, 0, offset).to_f
-                end
-                month_ticks.take_while { |value| value <= maximum }
-              else
-                time = Time.at(minimum).getlocal(offset)
-                year = time.year
-                year += 1 while Time.new(year, 1, 1, 0, 0, 0, offset).to_f < minimum
-                Array.new(8) { |index| Time.new(year + (index * (step / 31_536_000).round), 1, 1, 0, 0, 0, offset).to_f }.take_while { |value| value <= maximum }
-              end
-      ticks.empty? ? [minimum, maximum].uniq : ticks
-    end
-
-    def time_label(value, span, offset: 0)
-      time = Time.at(value).getlocal(offset)
-      return time.strftime("%Y") if span >= 31_536_000
-      return time.strftime("%Y-%m") if span >= 2_592_000
-      return time.strftime("%Y-%m-%d") if span >= 86_400
-      return time.strftime("%H:%M") if span >= 60
-
-      time.strftime("%H:%M:%S")
     end
 
     def number_label(value)
@@ -265,51 +223,6 @@ module Inkplot
       def bandwidth = (@range[1] - @range[0]) / [@domain.length, 1].max
       def format(value) = value.to_s
     end
-
-    class TimeScale
-      attr_reader :domain, :ticks, :offset
-      attr_accessor :range
-
-      def initialize(values, options = {})
-        times = values.filter_map { |value| Data.time(value) }
-        offsets = times.map(&:utc_offset).uniq
-        raise ArgumentError, "time axis contains mixed UTC offsets" if offsets.length > 1
-
-        @offset = offsets.first || 0
-        numbers = times.map(&:to_f)
-        low, high = numbers.minmax
-        low ||= 0.0
-        high ||= low + 86_400
-        low = time_limit(options[:min], low, "minimum")
-        high = time_limit(options[:max], high, "maximum")
-        raise ArgumentError, "time axis minimum must be less than maximum" unless low < high
-
-        @ticks = Ticks.time(low, high, offset: @offset)
-        @domain = [low, high]
-      end
-
-      def map(value)
-        time = value.is_a?(Numeric) ? value.to_f : Data.time(value)&.to_f
-        return nil unless time
-        raise ArgumentError, "time axis contains mixed UTC offsets" if !value.is_a?(Numeric) && Data.time(value).utc_offset != @offset
-
-        @range[0] + ((time - @domain[0]) * (@range[1] - @range[0]) / (@domain[1] - @domain[0]))
-      end
-
-      def format(value) = Ticks.time_label(value, @domain[1] - @domain[0], offset: @offset)
-
-      private
-
-      def time_limit(value, fallback, name)
-        return fallback if value.nil?
-
-        time = Data.time(value)
-        raise ArgumentError, "time axis #{name} must be a Time or Date" unless time
-        raise ArgumentError, "time axis contains mixed UTC offsets" unless time.utc_offset == @offset
-
-        time.to_f
-      end
-    end
   end
 
   module TextMetrics
@@ -334,7 +247,7 @@ module Inkplot
 
       Glyphic.default
     rescue LoadError => e
-      raise LoadError, "PNG output needs glyphic; install it with `gem install glyphic` (#{e.message})"
+      raise LoadError, "font metrics need glyphic; install it with `gem install glyphic` (#{e.message})"
     end
   end
 
@@ -427,21 +340,6 @@ module Inkplot
       add(:bar, points, label:, color:, horizontal:, stacked:, **)
     end
 
-    def histogram(values, bins: :auto, label: nil, color: nil, **)
-      numbers = Array(values).filter_map { |value| Data.number(value) }
-      raise ArgumentError, "histogram needs at least one numeric value" if numbers.empty?
-
-      numbers.sort!
-      edges = histogram_edges(numbers, bins)
-      counts = Array.new(edges.length - 1, 0)
-      numbers.each do |number|
-        index = edges.each_cons(2).find_index { |left, right| number >= left && (number < right || right == edges.last) }
-        counts[index] += 1 if index
-      end
-      points = counts.each_index.map { |index| { x: edges[index], x2: edges[index + 1], y: counts[index] } }
-      add(:bar, points, label:, color:, histogram: true, **)
-    end
-
     def hline(value, label: nil, color: nil, dash: true)
       number = Data.number(value)
       raise ArgumentError, "horizontal rule value must be finite and numeric" unless number
@@ -453,38 +351,12 @@ module Inkplot
       @notes << { type: :vline, value:, label:, color: Theme.validate_color(color), dash: }
     end
 
-    def text(x, y, value, color: nil)
-      @notes << { type: :text, x:, y: Data.number(y), value: value.to_s, color: Theme.validate_color(color) }
-    end
-
     def add(type, points, label: nil, color: nil, **options)
       raise ArgumentError, "unsupported chart mark: #{type}" unless %i[line scatter bar area step].include?(type.to_sym)
       raise ArgumentError, "gaps must be :break or :connect" if options[:gaps] && !%i[break connect].include?(options[:gaps])
 
       @series << Series.new(type: type.to_sym, points:, label: label&.to_s, color: Theme.validate_color(color), options:)
       self
-    end
-
-    private
-
-    def histogram_edges(numbers, bins)
-      low, high = numbers.minmax
-      return [low - 0.5, high + 0.5] if low == high
-
-      if bins == :auto
-        q1 = numbers[(numbers.length * 0.25).floor]
-        q3 = numbers[(numbers.length * 0.75).floor]
-        width = 2 * (q3 - q1) / (numbers.length**(1.0 / 3))
-        count = width.positive? ? ((high - low) / width).ceil : (1 + Math.log2(numbers.length)).ceil
-        count = count.clamp(1, 512)
-        Array.new(count + 1) { |index| low + ((high - low) * index / count.to_f) }
-      elsif bins.is_a?(Integer) && bins.positive?
-        Array.new(bins + 1) { |index| low + ((high - low) * index / bins.to_f) }
-      elsif bins.is_a?(Array) && bins.length >= 2 && bins.all? { |value| Data.number(value) } && bins.each_cons(2).all? { |left, right| left < right }
-        bins.map(&:to_f)
-      else
-        raise ArgumentError, "bins must be :auto, a positive integer, or increasing edges"
-      end
     end
   end
 
@@ -502,32 +374,12 @@ module Inkplot
       Renderers::SVG.render(SceneBuilder.call(self, width: width, height: height))
     end
 
-    def to_image(scale: 1)
-      require_relative "renderers/raster"
-      Renderers::Raster.render(SceneBuilder.call(self, width: width, height: height), scale: scale)
-    end
-
-    def to_png(width: self.width, height: self.height, scale: 1)
-      begin
-        require "tessel"
-      rescue LoadError => e
-        raise LoadError, "PNG output needs tessel; install it with `gem install tessel` (#{e.message})"
-      end
-      require_relative "renderers/raster"
-      Tessel::PNG.encode(Renderers::Raster.render(SceneBuilder.call(self, width:, height:), scale: scale))
-    end
-
-    def save(path, width: self.width, height: self.height, scale: 1)
+    def save(path, width: self.width, height: self.height)
       case File.extname(String(path)).downcase
       when ".svg" then File.write(path, to_svg(width:, height:))
-      when ".png" then File.binwrite(path, to_png(width:, height:, scale:))
-      else raise ArgumentError, "output path must end in .svg or .png"
+      else raise ArgumentError, "output path must end in .svg"
       end
       path
-    end
-
-    def to_inlay
-      { svg: to_svg, png: -> { to_png } }
     end
 
     private
@@ -569,14 +421,6 @@ module Inkplot
       y_ticks = ticks(y_scale)
       left = (y_ticks.map { |tick| TextMetrics.width(y_scale.format(tick), 11) }.max.to_f.ceil + 14).clamp(42, 120)
       bottom = 34
-      rotate = x_scale.is_a?(Scales::Band) && x_ticks.any? && x_ticks.map { |tick| TextMetrics.width(x_scale.format(tick), 10) }.max > (width - left - 20) / x_ticks.length
-      if rotate
-        visible_count = [(width - left - 20) / 72, 1].max
-        stride = (x_ticks.length.to_f / visible_count).ceil
-        last_index = x_ticks.length - 1
-        x_ticks = x_ticks.each_with_index.filter_map { |tick, index| tick if (index % stride).zero? || index == last_index }
-      end
-      bottom += rotate ? 43 : 0
       bottom += 20 if builder.x_label_text
       left += 18 if builder.y_label_text
       top = builder.title_text ? 40 : 18
@@ -603,7 +447,7 @@ module Inkplot
 
         label = x_scale.format(tick)
         elements << { type: :line, class: "grid-line", points: [[x, top], [x, height - bottom]], stroke: colors[:grid], width: 1 } if x_scale.is_a?(Scales::Band)
-        elements << { type: :text, x:, y: height - bottom + (rotate ? 14 : 18), text: label, fill: colors[:axis], anchor: :middle, size: 10, rotate: (rotate ? -45 : nil) }
+        elements << { type: :text, x:, y: height - bottom + 18, text: label, fill: colors[:axis], anchor: :middle, size: 10 }
       end
       elements << { type: :line, class: "axis-line", points: [[left, top], [left, height - bottom], [width - right, height - bottom]], stroke: colors[:axis], width: 1 }
       elements << { type: :text, x: width / 2.0, y: 22, text: builder.title_text, fill: colors[:foreground], anchor: :middle, size: 15 } if builder.title_text
@@ -623,11 +467,11 @@ module Inkplot
         if item.type == :bar
           current_bar_index = bar_index
           bar_index += 1
+          total = [bars.length, 1].max
           points.each do |point|
             next unless point[:y] && point[:x]
 
             if item.options[:horizontal]
-              total = [bars.length, 1].max
               band = y_scale.bandwidth * 0.72
               value = point[:y]
               base = if item.options[:stacked]
@@ -647,15 +491,7 @@ module Inkplot
               offset = item.options[:stacked] ? 0 : (current_bar_index - ((total - 1) / 2.0)) * band
               marks << { type: :rect, class: "bar-mark", series_index: index, x: [value, zero].min, y: category_y - (band / 2) + offset, width: (value - zero).abs, height: band,
                          fill: color }
-            elsif item.options[:histogram]
-              left_edge = x_scale.map(point[:x])
-              right_edge = x_scale.map(point[:x2])
-              zero = y_scale.map(0)
-              value = y_scale.map(point[:y])
-              marks << { type: :rect, class: "bar-mark", series_index: index, x: left_edge, y: [zero, value].min, width: [right_edge - left_edge - 1, 1].max,
-                         height: (zero - value).abs, fill: color }
             else
-              total = [bars.length, 1].max
               band = x_scale.bandwidth * (item.options[:stacked] ? 0.78 : 0.82 / total)
               x = x_scale.map(point[:x])
               value = point[:y]
@@ -718,10 +554,6 @@ module Inkplot
         when :vline
           x = x_scale.map(note[:value])
           marks << { type: :line, class: "rule-line", points: [[x, top], [x, height - bottom]], stroke: color, width: 1.5, dash: note[:dash] } if x
-        when :text
-          x = x_scale.map(note[:x])
-          y = y_scale.map(note[:y])
-          marks << { type: :text, x:, y:, text: note[:value], fill: color, anchor: :start, size: 11 } if x && y
         end
       end
 
@@ -739,10 +571,8 @@ module Inkplot
     def build_scale(values, options, axis, series)
       explicit = options[:scale] || options[:type]
       horizontal_bar = series.any? { |item| item.type == :bar && item.options[:horizontal] }
-      bar_band = series.any? { |item| item.type == :bar && !item.options[:histogram] && ((item.options[:horizontal] && axis == :y) || (!item.options[:horizontal] && axis == :x)) }
-      if explicit == :time || (explicit.nil? && values.any? { |value| Data.time(value) })
-        Scales::TimeScale.new(values, options)
-      elsif explicit == :band || (explicit.nil? && (bar_band || values.any? { |value| !Data.number(value) && !Data.time(value) }))
+      bar_band = series.any? { |item| item.type == :bar && ((item.options[:horizontal] && axis == :y) || (!item.options[:horizontal] && axis == :x)) }
+      if explicit == :band || (explicit.nil? && (bar_band || values.any? { |value| !Data.number(value) }))
         Scales::Band.new(values, options)
       elsif explicit == :log
         warn "Inkplot ignores zero and negative values on a log axis." if values.any? { |value| (number = Data.number(value)) && !number.positive? }
