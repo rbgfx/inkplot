@@ -100,6 +100,15 @@ RSpec.describe Inkplot do
     expect { Inkplot.histogram([1, 2], bins: [0, 2, 1]) }.to raise_error(ArgumentError, /strictly increasing/)
   end
 
+  it "keeps histogram bins finite and distinct at floating point extremes" do
+    [[-1e308, 1e308], [9e307, 1e308], [1e308, 1e308], [5e-324, 1e-323]].each do |values|
+      points = Inkplot::Histogram.points(values, 2)
+      expect(points.sum { |point| point[:y] }).to eq(values.length)
+      expect(points.all? { |point| point.values_at(:x, :x0, :x1).all?(&:finite?) && point[:x0] < point[:x1] }).to be(true)
+      expect(Inkplot.histogram(values, bins: 2).to_svg).not_to match(/NaN|Infinity|Inf"/)
+    end
+  end
+
   it "creates escaped, valid SVG for line, scatter, step, area, rules, and legend" do
     chart = Inkplot.plot(title: "A <trend>", theme: :dark) do |plot|
       plot.x_axis(label: "Week <1>")

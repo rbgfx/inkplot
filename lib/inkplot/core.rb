@@ -76,7 +76,12 @@ module Inkplot
         index = value == edges.last ? counts.length - 1 : upper && (upper - 1)
         counts[index] += 1 if index&.between?(0, counts.length - 1)
       end
-      counts.each_index.map { |index| { x: (edges[index] + edges[index + 1]) / 2.0, x0: edges[index], x1: edges[index + 1], y: counts[index] } }
+      counts.each_index.map do |index|
+        left, right = edges[index, 2]
+        span = right - left
+        center = span.finite? ? left + (span / 2.0) : (left / 2.0) + (right / 2.0)
+        { x: center, x0: left, x1: right, y: counts[index] }
+      end
     end
 
     def edges(values, bins)
@@ -84,8 +89,12 @@ module Inkplot
 
       low, high = values.minmax
       if low == high
-        low -= 0.5
-        high += 0.5
+        lower = low - 0.5
+        upper = high + 0.5
+        low = lower.finite? && lower < low ? lower : low.prev_float
+        high = upper.finite? && upper > high ? upper : high.next_float
+        low = values.first unless low.finite?
+        high = values.first unless high.finite?
       end
       count = if bins == :auto
                 sturges = (Math.log2(values.length) + 1).ceil
@@ -98,8 +107,17 @@ module Inkplot
                 raise ArgumentError, "bins must be :auto, a positive Integer, or an increasing edge Array"
               end
       count = count.clamp(1, values.length) if bins == :auto
-      width = (high - low) / count
-      Array.new(count + 1) { |index| index == count ? high : low + (index * width) }
+      span = high - low
+      Array.new(count + 1) do |index|
+        if index.zero?
+          low
+        elsif index == count
+          high
+        else
+          fraction = index.to_f / count
+          span.finite? ? low + (span * fraction) : (low * (1 - fraction)) + (high * fraction)
+        end
+      end.uniq
     end
     private_class_method :edges
 
@@ -125,6 +143,7 @@ module Inkplot
 
     def linear(minimum, maximum, count: 5)
       return [minimum] if minimum >= maximum
+      return [minimum, 0.0, maximum] unless (maximum - minimum).finite?
 
       step = linear_step(minimum, maximum, count:)
       first = (minimum / step).ceil * step
@@ -274,9 +293,11 @@ module Inkplot
         raise ArgumentError, "linear axis minimum must be less than maximum" unless low < high
 
         @ticks = Ticks.linear(low, high)
-        step = Ticks.linear_step(low, high)
-        low = (low / step).floor * step if options[:min].nil?
-        high = (high / step).ceil * step if options[:max].nil?
+        if (high - low).finite?
+          step = Ticks.linear_step(low, high)
+          low = (low / step).floor * step if options[:min].nil?
+          high = (high / step).ceil * step if options[:max].nil?
+        end
         @domain = [low, high]
       end
 
@@ -284,7 +305,14 @@ module Inkplot
         value = Data.number(value)
         return nil unless value
 
-        @range[0] + ((value - @domain[0]) * (@range[1] - @range[0]) / (@domain[1] - @domain[0]))
+        span = @domain[1] - @domain[0]
+        fraction = (value - @domain[0]) / span
+        unless span.finite?
+          numerator = (value / 2.0) - (@domain[0] / 2.0)
+          denominator = (@domain[1] / 2.0) - (@domain[0] / 2.0)
+          fraction = numerator / denominator
+        end
+        @range[0] + (fraction * (@range[1] - @range[0]))
       end
 
       def format(value) = Ticks.number_label(value)
