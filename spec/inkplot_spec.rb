@@ -35,6 +35,10 @@ RSpec.describe Inkplot do
     expect(Inkplot::Ticks.linear(0, 1234)).to eq([0, 500, 1000])
     expect(Inkplot::Scales::Log.new([1, 100]).ticks).to include(1, 10, 100)
     expect(Inkplot::Ticks.linear(0.00012, 0.00078).map { |tick| (tick * 1_000_000).round }).to eq([200, 400, 600])
+    tiny = Inkplot::Ticks.linear(0.0, 2e-9)
+    expect(tiny.map { |tick| Inkplot::Ticks.number_label(tick) }.uniq.length).to eq(tiny.length)
+    smallest = Float::MIN * Float::EPSILON
+    expect(Inkplot::Ticks.linear(0.0, smallest)).to eq([0.0, smallest])
     expect { Inkplot::Scales::Linear.new([1, 2], min: 4, max: 2) }.to raise_error(ArgumentError, /less than maximum/)
   end
 

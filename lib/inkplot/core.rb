@@ -141,8 +141,12 @@ module Inkplot
     def linear_step(minimum, maximum, count: 5)
       return 1.0 unless maximum > minimum
 
-      raw = (maximum - minimum).to_f / [count - 1, 1].max
+      span = (maximum - minimum).to_f
+      raw = span / [count - 1, 1].max
+      raw = span if raw.zero?
       power = 10.0**Math.log10(raw).floor
+      return raw if power.zero?
+
       fraction = raw / power
       (if fraction <= 1
          1
@@ -240,6 +244,8 @@ module Inkplot
     private_class_method :time_at
 
     def number_label(value)
+      return format("%.8g", value) if !value.zero? && value.abs < 1e-6
+
       value.to_i == value ? value.to_i.to_s : format("%.8f", value).sub(/0+\z/, "").sub(/\.\z/, "")
     end
   end
