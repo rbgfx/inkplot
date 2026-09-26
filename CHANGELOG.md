@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.2] - 2026-09-26
+
+- Keep histogram scales finite at extreme numeric values and distinguish very small chart values on axes.
+- Report when chart dimensions cannot fit labels or a legend.
+
 ## [0.3.1] - 2026-09-25
 
 - Make PNG rendering and the expanded chart features available in the installed gem.
