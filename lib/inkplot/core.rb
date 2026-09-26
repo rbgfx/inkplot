@@ -735,6 +735,8 @@ module Inkplot
       shown_gap = plot_width.to_f / [shown_ticks.length - 1, 1].max
       rotate_ticks = height >= 180 && shown_ticks.any? { |index| TextMetrics.width(x_scale.format(x_ticks[index]), 10) > shown_gap * 0.75 }
       bottom += 42 if rotate_ticks
+      raise ArgumentError, "chart dimensions are too small for labels or legend" if plot_width <= 0 || height - top - bottom <= 0
+
       x_scale.range = [left, width - right]
       y_scale.range = [height - bottom, top]
       clip = [left, top, width - right, height - bottom]

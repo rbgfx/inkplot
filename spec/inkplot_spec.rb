@@ -116,6 +116,14 @@ RSpec.describe Inkplot do
     expect(svg).not_to include("NaN", "Infinity", "href=")
   end
 
+  it "rejects dimensions that cannot fit the axes and legend" do
+    narrow = Inkplot.plot(width: 120, height: 100) do |plot|
+      plot.line([1, 2], label: "first")
+      plot.line([2, 3], label: "second")
+    end
+    expect { narrow.to_svg }.to raise_error(ArgumentError, /too small for labels or legend/)
+  end
+
   it "uses the dark palette, warns on palette cycling, and omits a single-series legend" do
     expect(Inkplot::Theme.colors(:dark)[:background]).to eq("#171B22")
     expect(Inkplot::Theme.series_color(8, :dark)).not_to eq(Inkplot::Theme::PALETTE.first)
